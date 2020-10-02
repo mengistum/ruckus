@@ -361,10 +361,8 @@ class Ruckus:
 
         # Get wlan List for the selected zone
         wlan_list = self. session.get(f'{self.scg200_uri}/v5_0/rkszones/{zone_id}/wlans').json()
-
         # Get the list of SSIDs and their related info
         wlan_info = wlan_list['list']
-
         # Initialize wlan_id with 0
         wlan_id = '0'
         # Go over each list until you find "SFUSD" SSID and grab "wlan_id"
@@ -373,7 +371,6 @@ class Ruckus:
             if wlan_info[i]['ssid'] == 'SFUSD':
                 wlan_id = wlan_info[i]['id']
                 break
-
         # Return wlan_id
         return wlan_id
 
@@ -396,7 +393,6 @@ class Ruckus:
 
         mod_wlan = self.session.patch(f'{self.scg200_uri}/v5_0/rkszones/{zone_id}/wlans\
             /{wlan_id}/authServiceOrProfile', json = {'name': auth_service_name})
-
         # Print to the user whether the change was successful
         if mod_wlan.status_code == 204:
             print(f'Response: {mod_wlan.status_code}. SUCCESS!')
@@ -419,9 +415,7 @@ class Ruckus:
 
         wlan_info = self.session.get(f'{self.scg200_uri}/v5_0/rkszones/{zone_id}/\
             wlans/{wlan_id}').json()
-
         auth_profile_name = wlan_info['authServiceOrProfile']['name']
-
         # Return authentication profile name
         return auth_profile_name
 
