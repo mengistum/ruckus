@@ -3,7 +3,7 @@ This is the first API I worked on to interact with Ruckus SCG200.
 
 Author:     Meheretab Mengistu
 Date:       09/29/2020
-Version:    2.0
+Version:    2.1
 Reference:  Philip Siu Ruckus.py
 """
 
@@ -20,10 +20,10 @@ class Ruckus:
     """
 
     # Initialize the object -- take username, password during initialization
-    def __init__(self, controller_ip, port, username, password):
+    def __init__(self, controller_ip, username, password):
 
         # URI for SCG 200 to connect to and user_info
-        self.scg200_uri = f'https://{controller_ip}:{port}/wsg/api/public'
+        self.scg200_uri = f'https://{controller_ip}:8443/wsg/api/public'
         user_info = {'username': username, 'password': password}
 
         # Create session and initiate connection
@@ -204,78 +204,88 @@ class Ruckus:
 
 
 
-    def channelfly(self, zone, channel='both'):
+    def channelfly(self, zone_id, turn_off, channel):
         """
         Turn ON/OFF channelfly for a zone
 
         Parameters:
-        Zone - zone name
+        Zone_id - zone ID
+        Turn_off - whether to turn_off Channelfly
         Channel - channel to work on (2.4, 5.0, both)
 
         Returns:
         Output:    Response status_code (204)
         """
 
-        # Get zone_id from zone name
-        zone_id = self.get_zone_id(zone)
-
-        # Ask whether do you want to turn off channelfly
-        turn_off = input('Do you want to DISABLE channelfly (Y/N):  ')
-
-        if turn_off.upper()=='N':
-            channelfly = {'channelSelectMode': 'channelfly', 'channelflyMtbc': 300}
+        # Check whether the user wants to Turn ON ChannelFly, BackgroundScanning, or Not
+        if turn_off.upper() == 'N':
+            channelfly = {'channelSelectMode': 'ChannelFly', 'channelFlyMtbc': 480}
+        elif turn_off.upper() == 'B':
+            channelfly = {'channelSelectMode': 'BackgroundScanning', 'channelFlyMtbc': 480}
         else:
             channelfly = {'channelSelectMode': 'None'}
 
-            if channel=='both':
-                print('Turning off channelfly on both 2.4GHz and 5GHz')
-                ch24 = self.session.patch(f'{self.scg200_uri}/v5_0/rkszones/{zone_id}/\
-                    autoChannelSelection24', json=channelfly)
-                ch50 = self.session.patch(f'{self.scg200_uri}/v5_0/rkszones/{zone_id}/\
-                    autoChannelSelection50', json=channelfly)
-                print('Channel 2.4G Response: ' + str(ch24.status_code))
-                print('Channel 5.0G Response: ' + str(ch50.status_code))
-                print('\nThe expected response for both Channels is 204!\n')
 
-            elif channel=='2.4':
-                print('Turning off channelfly on 2.4GHz')
-                ch24 = self.session.patch(f'{self.scg200_uri}/v5_0/rkszones/{zone_id}/\
-                    autoChannelSelection24', json=channelfly)
-                print('Channel 2.4G Response: ' + str(ch24.status_code))
-                print('\nThe expected response is 204!\n')
+        # Check whether the user wants to change on Channel 2.4G, 5G, or both
+        if channel=='both':
+            print('Modifying channelfly on both 2.4GHz and 5GHz')
+            ch24 = self.session.patch(f'{self.scg200_uri}/v5_0/rkszones/{zone_id}/'
+                f'autoChannelSelection24', json=channelfly)
+            ch50 = self.session.patch(f'{self.scg200_uri}/v5_0/rkszones/{zone_id}/'
+                f'autoChannelSelection50', json=channelfly)
+            print('Channel 2.4G Response: ' + str(ch24.status_code))
+            print('Channel 5.0G Response: ' + str(ch50.status_code))
+            print('\nThe expected response for both Channels is 204!\n')
 
-            elif channel=='5.0':
-                print('Turning off channelfly on 5GHz')
-                ch50 = self.session.patch(f'{self.scg200_uri}/v5_0/rkszones/{zone_id}/\
-                    autoChannelSelection50', json=channelfly)
-                print('Channel 5.0G Response: ' + str(ch50.status_code))
-                print('\nThe expected response is 204!\n')
+            return ch24
 
-            else:
-                print('You have entered wrong channel information!')
+        elif channel=='2.4':
+            print('Modifying channelfly on 2.4GHz')
+            ch24 = self.session.patch(f'{self.scg200_uri}/v5_0/rkszones/{zone_id}/'
+                f'autoChannelSelection24', json=channelfly)
+            print('Channel 2.4G Response: ' + str(ch24.status_code))
+            print('\nThe expected response is 204!\n')
+
+            return ch24
+
+        elif channel=='5.0':
+            print('Modifying channelfly on 5GHz')
+            ch50 = self.session.patch(f'{self.scg200_uri}/v5_0/rkszones/{zone_id}/'
+                f'autoChannelSelection50', json=channelfly)
+            print('Channel 5.0G Response: ' + str(ch50.status_code))
+            print('\nThe expected response is 204!\n')
+
+            return ch50
+
+        else:
+            print('You have entered wrong channel information!')
 
 
 
-    def update_ap_login(self, zone, aplogin):
+    def update_ap_login(self, zone_id, aplogin):
         """
         Change AP Login username/password for a zone
 
         Parameters:
-        zone - zone name
+        zone_id - zone ID
         aplogin - login credentials for the APs
 
         Returns:
+        status_code - return status_code to the calling function
         """
 
-        # Get zone Id from the zone name
-        zone_id = self.get_zone_id(zone)
+        print('\n\nApplying username/password change for AP Login!\n')
 
-        print('Applying username/password change for AP Login!\n')
-
-        self.session.patch(f'{self.scg200_uri}/v5_0/rkszones/\
+        response = self.session.patch(f'{self.scg200_uri}/v5_0/rkszones/\
             {zone_id}/login', json=aplogin)
 
-        print('Username/password for AP Login is updated!')
+        # Compare response code and print out SUCCESS or FAILED
+        if response.status_code == 204:
+            print('Username/password for AP Login is SUCCESSFULLY CHANGED!\n\n')
+        else:
+            print('Username/password change FAILED!\n\n')
+
+        return response.status_code
 
 
     def update_radio(self, zone, channel='both'):
