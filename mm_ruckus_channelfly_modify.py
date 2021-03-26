@@ -3,8 +3,8 @@
 """
 Author:  Meheretab Mengistu
 Purpose: To change AP Login information
-Version: 1.0
-Date:    March 22, 2021
+Version: 1.1
+Date:    March 26, 2021
 """
 
 # Import required modules
@@ -54,7 +54,7 @@ ALL ]: ') or 'Test'
         #   Get current time and modify it by replacing ":" with ""
         modified_time = datetime.now().isoformat(timespec='seconds').replace(':', '')
         #   Create a new output file
-        filename = f'aplogin_modified_{zone_grp.upper()}_{modified_time}.txt'
+        filename = f'channelfly_modified_{zone_grp.upper()}_{modified_time}.txt'
 
         # Ask whether do you want to turn off channelfly
         print('\n\nDo you want to DISABLE ChannelFly? Choose Y(Yes), N(No), B(BackgroundScanning):')
